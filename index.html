@@ -73,19 +73,19 @@
 <body>
     <div class="grid">
         <div class="map-card">
-            <div class="map-label label-2025">2025 🚗 Auto</div>
+            <div class="map-label label-2025">2025 🚗 Auto (Mo 15.12 8:00)</div>
             <div id="map2025car" class="placeholder">Keine Koordinaten</div>
         </div>
         <div class="map-card">
-            <div class="map-label label-2026">2026 🚗 Auto</div>
+            <div class="map-label label-2026">2026 🚗 Auto (Mo 19.01 8:00)</div>
             <div id="map2026car" class="placeholder">Keine Koordinaten</div>
         </div>
         <div class="map-card">
-            <div class="map-label label-2025">2025 🚆 ÖV</div>
+            <div class="map-label label-2025">2025 🚆 ÖV (Mo 15.12 8:00)</div>
             <div id="map2025transit" class="placeholder">Keine Koordinaten</div>
         </div>
         <div class="map-card">
-            <div class="map-label label-2026">2026 🚆 ÖV</div>
+            <div class="map-label label-2026">2026 🚆 ÖV (Mo 19.01 8:00)</div>
             <div id="map2026transit" class="placeholder">Keine Koordinaten</div>
         </div>
     </div>
@@ -93,6 +93,21 @@
     <script>
         const DESTINATION = '47.207526,9.529024';
         
+        // Timestamps for arrive by 8:00 AM local time
+        // Mon 15 Dec 2025 8:00 AM = 1765785600
+        // Mon 19 Jan 2026 8:00 AM = 1768809600
+        const TIMESTAMP_2025 = 1765785600;
+        const TIMESTAMP_2026 = 1768809600;
+        
+        // Build Google Maps URL with /data parameter for time
+        // !6e1 = arrive by, !7e2 = local time, !8j<timestamp> = time
+        // !3e0 = driving, !3e3 = transit
+        function getMapsUrl(origin, mode, timestamp) {
+            const modeCode = mode === 'driving' ? '0' : '3';
+            return `https://www.google.com/maps/dir/${origin}/${DESTINATION}/data=!4m6!4m5!2m3!6e1!7e2!8j${timestamp}!3e${modeCode}`;
+        }
+        
+        // Fallback to embed API (no time support)
         function getEmbedUrl(origin, mode) {
             return `https://www.google.com/maps/embed/v1/directions?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&origin=${origin}&destination=${DESTINATION}&mode=${mode}`;
         }
@@ -103,17 +118,18 @@
             const origin2026 = params.get('origin2026');
             
             if (origin2025) {
+                // Try embedding with time parameter
                 document.getElementById('map2025car').innerHTML = 
-                    `<iframe class="map-frame" src="${getEmbedUrl(origin2025, 'driving')}" allowfullscreen loading="lazy"></iframe>`;
+                    `<iframe class="map-frame" src="${getMapsUrl(origin2025, 'driving', TIMESTAMP_2025)}" allowfullscreen loading="lazy" referrerpolicy="no-referrer"></iframe>`;
                 document.getElementById('map2025transit').innerHTML = 
-                    `<iframe class="map-frame" src="${getEmbedUrl(origin2025, 'transit')}" allowfullscreen loading="lazy"></iframe>`;
+                    `<iframe class="map-frame" src="${getMapsUrl(origin2025, 'transit', TIMESTAMP_2025)}" allowfullscreen loading="lazy" referrerpolicy="no-referrer"></iframe>`;
             }
             
             if (origin2026) {
                 document.getElementById('map2026car').innerHTML = 
-                    `<iframe class="map-frame" src="${getEmbedUrl(origin2026, 'driving')}" allowfullscreen loading="lazy"></iframe>`;
+                    `<iframe class="map-frame" src="${getMapsUrl(origin2026, 'driving', TIMESTAMP_2026)}" allowfullscreen loading="lazy" referrerpolicy="no-referrer"></iframe>`;
                 document.getElementById('map2026transit').innerHTML = 
-                    `<iframe class="map-frame" src="${getEmbedUrl(origin2026, 'transit')}" allowfullscreen loading="lazy"></iframe>`;
+                    `<iframe class="map-frame" src="${getMapsUrl(origin2026, 'transit', TIMESTAMP_2026)}" allowfullscreen loading="lazy" referrerpolicy="no-referrer"></iframe>`;
             }
         }
         
