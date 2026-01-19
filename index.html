@@ -1,0 +1,314 @@
+import React, { useState, useEffect } from 'react';
+
+const DESTINATION = '47.207526,9.529024';
+
+export default function MQSRouteComparison() {
+  const [origin2025, setOrigin2025] = useState('');
+  const [origin2026, setOrigin2026] = useState('');
+  const [showMaps, setShowMaps] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    // Read URL parameters on load
+    const params = new URLSearchParams(window.location.search);
+    const o2025 = params.get('origin2025') || '';
+    const o2026 = params.get('origin2026') || '';
+    
+    if (o2025) setOrigin2025(o2025);
+    if (o2026) setOrigin2026(o2026);
+    
+    // Auto-show maps if both params present
+    if (o2025 && o2026) {
+      setShowMaps(true);
+    }
+  }, []);
+
+  const cleanCoord = (coord) => coord.replace(/\s+/g, '');
+
+  const getEmbedUrl = (origin, mode) => {
+    const clean = cleanCoord(origin);
+    return `https://www.google.com/maps/embed/v1/directions?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&origin=${clean}&destination=${DESTINATION}&mode=${mode}`;
+  };
+
+  const getDirectUrl = (origin, mode) => {
+    const clean = cleanCoord(origin);
+    return `https://www.google.com/maps/dir/?api=1&origin=${clean}&destination=${DESTINATION}&travelmode=${mode}`;
+  };
+
+  const generateShareUrl = () => {
+    const base = window.location.origin + window.location.pathname;
+    const params = new URLSearchParams();
+    if (origin2025) params.set('origin2025', cleanCoord(origin2025));
+    if (origin2026) params.set('origin2026', cleanCoord(origin2026));
+    return `${base}?${params.toString()}`;
+  };
+
+  const handleCompare = () => {
+    if (!origin2025 || !origin2026) {
+      alert('Bitte beide Wohnadressen eingeben');
+      return;
+    }
+    setShowMaps(true);
+    // Update URL without reload
+    window.history.replaceState({}, '', generateShareUrl());
+  };
+
+  const handleClear = () => {
+    setOrigin2025('');
+    setOrigin2026('');
+    setShowMaps(false);
+    window.history.replaceState({}, '', window.location.pathname);
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(generateShareUrl());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800 mb-1">🗺️ MQS Route Comparison</h1>
+          <p className="text-gray-600 text-sm">Vergleiche deine Pendelstrecke 2025 vs. 2026 zu Presta</p>
+        </div>
+
+        {/* Info Banner */}
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-5 mb-6 border-l-4 border-blue-500">
+          <h3 className="text-blue-700 font-semibold mb-3">ℹ️ Warum hat sich mein MQS geändert?</h3>
+          <p className="text-gray-700 text-sm mb-4">
+            Der Mobility Quality Score bestimmt deinen Parktarif basierend auf ÖV-Alternativen. Zwei Faktoren können zu Änderungen führen:
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="bg-white rounded-lg p-3 flex gap-3">
+              <span className="text-2xl">🚂</span>
+              <div>
+                <h4 className="font-semibold text-sm text-gray-800">Fahrplanwechsel (15. Dezember)</h4>
+                <p className="text-xs text-gray-600">Neue ÖV-Verbindungen können deine Pendelzeit verändern.</p>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg p-3 flex gap-3">
+              <span className="text-2xl">🗺️</span>
+              <div>
+                <h4 className="font-semibold text-sm text-gray-800">Routing: Mapbox → Google Maps</h4>
+                <p className="text-xs text-gray-600">2026 nutzen wir Google Maps für genauere Berechnung.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tariff Cards */}
+        <div className="bg-white rounded-xl p-4 mb-6 shadow-sm">
+          <h3 className="font-semibold text-gray-800 mb-3 text-sm">📊 MQS Tarifstufen</h3>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+              <div className="text-xl font-bold text-gray-800">CHF 5.–</div>
+              <div className="text-xs text-gray-600 mt-1">Tarif A</div>
+              <div className="text-xs text-gray-500 mt-2">Gute ÖV-Alternativen</div>
+            </div>
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
+              <div className="text-xl font-bold text-gray-800">CHF 3.–</div>
+              <div className="text-xs text-gray-600 mt-1">Tarif B</div>
+              <div className="text-xs text-gray-500 mt-2">Akzeptable Verbindungen</div>
+            </div>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+              <div className="text-xl font-bold text-gray-800">CHF 1.–</div>
+              <div className="text-xs text-gray-600 mt-1">Tarif C</div>
+              <div className="text-xs text-gray-500 mt-2">Eingeschränkte Alternativen</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Input Section */}
+        <div className="bg-white rounded-xl p-4 mb-6 shadow-sm">
+          <h3 className="font-semibold text-gray-800 mb-4 text-sm">📍 Koordinaten eingeben</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 uppercase mb-1">2025 Wohnadresse</label>
+              <input
+                type="text"
+                value={origin2025}
+                onChange={(e) => setOrigin2025(e.target.value)}
+                placeholder="z.B. 47.235761, 9.631085"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+              />
+              <span className="text-xs text-gray-500">Mapbox-basiert</span>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 uppercase mb-1">2026 Wohnadresse</label>
+              <input
+                type="text"
+                value={origin2026}
+                onChange={(e) => setOrigin2026(e.target.value)}
+                placeholder="z.B. 47.240000, 9.640000"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+              />
+              <span className="text-xs text-gray-500">Google Maps-basiert</span>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 uppercase mb-1">Ziel: Presta Eschen</label>
+              <input
+                type="text"
+                value="47.207526, 9.529024"
+                disabled
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-100 text-gray-600"
+              />
+              <span className="text-xs text-gray-500">Fix</span>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleCompare}
+              className="px-5 py-2 bg-blue-500 text-white rounded-lg text-sm font-semibold hover:bg-blue-600 transition"
+            >
+              Routen vergleichen
+            </button>
+            <button
+              onClick={handleClear}
+              className="px-5 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-300 transition"
+            >
+              Leeren
+            </button>
+          </div>
+        </div>
+
+        {/* Maps Grid */}
+        {showMaps && (
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            {/* Column Headers */}
+            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+              <h2 className="font-semibold text-gray-800">2025 → Presta</h2>
+              <span className="inline-block px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-xs font-semibold mt-1">Bisherig</span>
+            </div>
+            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
+              <h2 className="font-semibold text-gray-800">2026 → Presta</h2>
+              <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold mt-1">Neu</span>
+            </div>
+
+            {/* Car Maps */}
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+                <span>🚗</span>
+                <span className="font-semibold text-sm text-gray-800">Mit dem Auto</span>
+              </div>
+              <iframe
+                src={getEmbedUrl(origin2025, 'driving')}
+                className="w-full h-64 border-0"
+                allowFullScreen
+                loading="lazy"
+              />
+              <div className="p-2 border-t border-gray-100">
+                <a
+                  href={getDirectUrl(origin2025, 'driving')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-center py-2 bg-gray-100 rounded-lg text-blue-500 text-xs font-medium hover:bg-blue-50"
+                >
+                  In Google Maps öffnen
+                </a>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+                <span>🚗</span>
+                <span className="font-semibold text-sm text-gray-800">Mit dem Auto</span>
+              </div>
+              <iframe
+                src={getEmbedUrl(origin2026, 'driving')}
+                className="w-full h-64 border-0"
+                allowFullScreen
+                loading="lazy"
+              />
+              <div className="p-2 border-t border-gray-100">
+                <a
+                  href={getDirectUrl(origin2026, 'driving')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-center py-2 bg-gray-100 rounded-lg text-blue-500 text-xs font-medium hover:bg-blue-50"
+                >
+                  In Google Maps öffnen
+                </a>
+              </div>
+            </div>
+
+            {/* Transit Maps */}
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+                <span>🚆</span>
+                <span className="font-semibold text-sm text-gray-800">Mit ÖV</span>
+              </div>
+              <iframe
+                src={getEmbedUrl(origin2025, 'transit')}
+                className="w-full h-64 border-0"
+                allowFullScreen
+                loading="lazy"
+              />
+              <div className="p-2 border-t border-gray-100">
+                <a
+                  href={getDirectUrl(origin2025, 'transit')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-center py-2 bg-gray-100 rounded-lg text-blue-500 text-xs font-medium hover:bg-blue-50"
+                >
+                  In Google Maps öffnen
+                </a>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+                <span>🚆</span>
+                <span className="font-semibold text-sm text-gray-800">Mit ÖV</span>
+              </div>
+              <iframe
+                src={getEmbedUrl(origin2026, 'transit')}
+                className="w-full h-64 border-0"
+                allowFullScreen
+                loading="lazy"
+              />
+              <div className="p-2 border-t border-gray-100">
+                <a
+                  href={getDirectUrl(origin2026, 'transit')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-center py-2 bg-gray-100 rounded-lg text-blue-500 text-xs font-medium hover:bg-blue-50"
+                >
+                  In Google Maps öffnen
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Share URL */}
+        {showMaps && (
+          <div className="bg-white rounded-xl p-4 shadow-sm">
+            <h3 className="font-semibold text-gray-800 mb-2 text-sm">📋 Teilbarer Link</h3>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={generateShareUrl()}
+                readOnly
+                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-xs font-mono bg-gray-50"
+              />
+              <button
+                onClick={handleCopy}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-semibold hover:bg-green-600 transition"
+              >
+                {copied ? 'Kopiert!' : 'Kopieren'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="text-center mt-6 text-gray-500 text-xs">
+          Mehr Infos: <a href="https://www.my-mo.com/de/presta" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">my-mo.com/de/presta</a>
+        </div>
+      </div>
+    </div>
+  );
+}
