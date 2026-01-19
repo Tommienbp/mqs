@@ -1,314 +1,705 @@
-import React, { useState, useEffect } from 'react';
-
-const DESTINATION = '47.207526,9.529024';
-
-export default function MQSRouteComparison() {
-  const [origin2025, setOrigin2025] = useState('');
-  const [origin2026, setOrigin2026] = useState('');
-  const [showMaps, setShowMaps] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    // Read URL parameters on load
-    const params = new URLSearchParams(window.location.search);
-    const o2025 = params.get('origin2025') || '';
-    const o2026 = params.get('origin2026') || '';
-    
-    if (o2025) setOrigin2025(o2025);
-    if (o2026) setOrigin2026(o2026);
-    
-    // Auto-show maps if both params present
-    if (o2025 && o2026) {
-      setShowMaps(true);
-    }
-  }, []);
-
-  const cleanCoord = (coord) => coord.replace(/\s+/g, '');
-
-  const getEmbedUrl = (origin, mode) => {
-    const clean = cleanCoord(origin);
-    return `https://www.google.com/maps/embed/v1/directions?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&origin=${clean}&destination=${DESTINATION}&mode=${mode}`;
-  };
-
-  const getDirectUrl = (origin, mode) => {
-    const clean = cleanCoord(origin);
-    return `https://www.google.com/maps/dir/?api=1&origin=${clean}&destination=${DESTINATION}&travelmode=${mode}`;
-  };
-
-  const generateShareUrl = () => {
-    const base = window.location.origin + window.location.pathname;
-    const params = new URLSearchParams();
-    if (origin2025) params.set('origin2025', cleanCoord(origin2025));
-    if (origin2026) params.set('origin2026', cleanCoord(origin2026));
-    return `${base}?${params.toString()}`;
-  };
-
-  const handleCompare = () => {
-    if (!origin2025 || !origin2026) {
-      alert('Bitte beide Wohnadressen eingeben');
-      return;
-    }
-    setShowMaps(true);
-    // Update URL without reload
-    window.history.replaceState({}, '', generateShareUrl());
-  };
-
-  const handleClear = () => {
-    setOrigin2025('');
-    setOrigin2026('');
-    setShowMaps(false);
-    window.history.replaceState({}, '', window.location.pathname);
-  };
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(generateShareUrl());
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-1">🗺️ MQS Route Comparison</h1>
-          <p className="text-gray-600 text-sm">Vergleiche deine Pendelstrecke 2025 vs. 2026 zu Presta</p>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQS Route Comparison | Presta Mobility</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .header .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .info-banner {
+            background: linear-gradient(135deg, #e8f4fd 0%, #f0e6ff 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            border-left: 4px solid #4285f4;
+        }
+        
+        .info-banner h3 {
+            color: #1a73e8;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .info-banner p {
+            color: #444;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        
+        .change-reasons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .change-reason {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .change-reason .icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        
+        .change-reason .text h4 {
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .change-reason .text p {
+            font-size: 12px;
+            color: #666;
+            margin: 0;
+        }
+        
+        .tariff-info {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .tariff-info h3 {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 12px;
+        }
+        
+        .tariff-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        
+        .tariff-card {
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .tariff-a {
+            background: #ffebee;
+            border: 1px solid #ef9a9a;
+        }
+        
+        .tariff-b {
+            background: #fff3e0;
+            border: 1px solid #ffcc80;
+        }
+        
+        .tariff-c {
+            background: #e8f5e9;
+            border: 1px solid #a5d6a7;
+        }
+        
+        .tariff-card .price {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .tariff-card .label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        .tariff-card .criteria {
+            font-size: 11px;
+            color: #888;
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+        
+        .input-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .input-section h3 {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 16px;
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .input-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .input-group input {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #4285f4;
+        }
+        
+        .input-group input:disabled {
+            background: #f5f5f5;
+            color: #666;
+        }
+        
+        .input-group .hint {
+            font-size: 11px;
+            color: #888;
+        }
+        
+        .btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .btn:hover {
+            background: #3367d6;
+        }
+        
+        .btn-secondary {
+            background: #f1f3f4;
+            color: #333;
+            margin-left: 8px;
+        }
+        
+        .btn-secondary:hover {
+            background: #e8eaed;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .column-header {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .column-header h2 {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .column-header .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .badge-2025 {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+        
+        .badge-2026 {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .column-header .tech-note {
+            font-size: 11px;
+            color: #888;
+            margin-top: 8px;
+        }
+        
+        .map-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .map-card-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .map-card-header .icon {
+            font-size: 20px;
+        }
+        
+        .map-card-header h3 {
+            font-size: 14px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .map-frame {
+            flex: 1;
+            min-height: 280px;
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .map-placeholder {
+            flex: 1;
+            min-height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f9f9f9;
+            color: #999;
+            font-size: 14px;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .direct-links {
+            padding: 10px 16px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .direct-links a {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            background: #f5f5f5;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #4285f4;
+            font-size: 12px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        
+        .direct-links a:hover {
+            background: #e8f0fe;
+        }
+        
+        .url-section {
+            margin-top: 24px;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .url-section h3 {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .url-box {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .url-box input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 12px;
+            font-family: monospace;
+            background: #f9f9f9;
+        }
+        
+        .copy-btn {
+            padding: 10px 16px;
+            background: #34a853;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .copy-btn:hover {
+            background: #2d8e47;
+        }
+        
+        .footer-note {
+            margin-top: 24px;
+            text-align: center;
+            color: #888;
+            font-size: 12px;
+        }
+        
+        .footer-note a {
+            color: #4285f4;
+        }
+        
+        @media (max-width: 900px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .change-reasons {
+                grid-template-columns: 1fr;
+            }
+            
+            .tariff-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗺️ MQS Route Comparison</h1>
+            <p class="subtitle">Vergleiche deine Pendelstrecke 2025 vs. 2026 zu Presta</p>
         </div>
-
-        {/* Info Banner */}
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-5 mb-6 border-l-4 border-blue-500">
-          <h3 className="text-blue-700 font-semibold mb-3">ℹ️ Warum hat sich mein MQS geändert?</h3>
-          <p className="text-gray-700 text-sm mb-4">
-            Der Mobility Quality Score bestimmt deinen Parktarif basierend auf ÖV-Alternativen. Zwei Faktoren können zu Änderungen führen:
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="bg-white rounded-lg p-3 flex gap-3">
-              <span className="text-2xl">🚂</span>
-              <div>
-                <h4 className="font-semibold text-sm text-gray-800">Fahrplanwechsel (15. Dezember)</h4>
-                <p className="text-xs text-gray-600">Neue ÖV-Verbindungen können deine Pendelzeit verändern.</p>
-              </div>
+        
+        <div class="info-banner">
+            <h3>ℹ️ Warum hat sich mein MQS geändert?</h3>
+            <p>Der Mobility Quality Score (MQS) bestimmt deinen Parktarif basierend auf deinen ÖV-Alternativen. Zwei Faktoren können zu Änderungen führen:</p>
+            
+            <div class="change-reasons">
+                <div class="change-reason">
+                    <span class="icon">🚂</span>
+                    <div class="text">
+                        <h4>Fahrplanwechsel (15. Dezember)</h4>
+                        <p>Neue ÖV-Verbindungen können deine Pendelzeit verbessern oder verschlechtern.</p>
+                    </div>
+                </div>
+                <div class="change-reason">
+                    <span class="icon">🗺️</span>
+                    <div class="text">
+                        <h4>Routing-Update: Mapbox → Google Maps</h4>
+                        <p>2026 verwenden wir Google Maps für genauere Routenberechnung. Dies kann zu unterschiedlichen Reisezeiten führen.</p>
+                    </div>
+                </div>
             </div>
-            <div className="bg-white rounded-lg p-3 flex gap-3">
-              <span className="text-2xl">🗺️</span>
-              <div>
-                <h4 className="font-semibold text-sm text-gray-800">Routing: Mapbox → Google Maps</h4>
-                <p className="text-xs text-gray-600">2026 nutzen wir Google Maps für genauere Berechnung.</p>
-              </div>
-            </div>
-          </div>
         </div>
-
-        {/* Tariff Cards */}
-        <div className="bg-white rounded-xl p-4 mb-6 shadow-sm">
-          <h3 className="font-semibold text-gray-800 mb-3 text-sm">📊 MQS Tarifstufen</h3>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
-              <div className="text-xl font-bold text-gray-800">CHF 5.–</div>
-              <div className="text-xs text-gray-600 mt-1">Tarif A</div>
-              <div className="text-xs text-gray-500 mt-2">Gute ÖV-Alternativen</div>
+        
+        <div class="tariff-info">
+            <h3>📊 MQS Tarifstufen</h3>
+            <div class="tariff-grid">
+                <div class="tariff-card tariff-a">
+                    <div class="price">CHF 5.–</div>
+                    <div class="label">Tarif A</div>
+                    <div class="criteria">Gute ÖV-Alternativen<br>≤15 min oder ≤30% länger als Auto</div>
+                </div>
+                <div class="tariff-card tariff-b">
+                    <div class="price">CHF 3.–</div>
+                    <div class="label">Tarif B</div>
+                    <div class="criteria">Akzeptable ÖV-Verbindungen<br>≤2× Autozeit oder ≤10 km</div>
+                </div>
+                <div class="tariff-card tariff-c">
+                    <div class="price">CHF 1.–</div>
+                    <div class="label">Tarif C</div>
+                    <div class="criteria">Schichtarbeit oder<br>eingeschränkte ÖV-Alternativen</div>
+                </div>
             </div>
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
-              <div className="text-xl font-bold text-gray-800">CHF 3.–</div>
-              <div className="text-xs text-gray-600 mt-1">Tarif B</div>
-              <div className="text-xs text-gray-500 mt-2">Akzeptable Verbindungen</div>
-            </div>
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-              <div className="text-xl font-bold text-gray-800">CHF 1.–</div>
-              <div className="text-xs text-gray-600 mt-1">Tarif C</div>
-              <div className="text-xs text-gray-500 mt-2">Eingeschränkte Alternativen</div>
-            </div>
-          </div>
         </div>
-
-        {/* Input Section */}
-        <div className="bg-white rounded-xl p-4 mb-6 shadow-sm">
-          <h3 className="font-semibold text-gray-800 mb-4 text-sm">📍 Koordinaten eingeben</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 uppercase mb-1">2025 Wohnadresse</label>
-              <input
-                type="text"
-                value={origin2025}
-                onChange={(e) => setOrigin2025(e.target.value)}
-                placeholder="z.B. 47.235761, 9.631085"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
-              />
-              <span className="text-xs text-gray-500">Mapbox-basiert</span>
+        
+        <div class="input-section">
+            <h3>📍 Koordinaten eingeben</h3>
+            <div class="input-grid">
+                <div class="input-group">
+                    <label>2025 Wohnadresse (lat, lng)</label>
+                    <input type="text" id="origin2025" placeholder="z.B. 47.235761, 9.631085">
+                    <span class="hint">Mapbox-basierte Berechnung</span>
+                </div>
+                <div class="input-group">
+                    <label>2026 Wohnadresse (lat, lng)</label>
+                    <input type="text" id="origin2026" placeholder="z.B. 47.240000, 9.640000">
+                    <span class="hint">Google Maps-basierte Berechnung</span>
+                </div>
+                <div class="input-group">
+                    <label>Ziel: Presta Eschen</label>
+                    <input type="text" id="destination" value="47.207526, 9.529024" disabled>
+                    <span class="hint">Presta Haupteingang (fix)</span>
+                </div>
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 uppercase mb-1">2026 Wohnadresse</label>
-              <input
-                type="text"
-                value={origin2026}
-                onChange={(e) => setOrigin2026(e.target.value)}
-                placeholder="z.B. 47.240000, 9.640000"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
-              />
-              <span className="text-xs text-gray-500">Google Maps-basiert</span>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 uppercase mb-1">Ziel: Presta Eschen</label>
-              <input
-                type="text"
-                value="47.207526, 9.529024"
-                disabled
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-100 text-gray-600"
-              />
-              <span className="text-xs text-gray-500">Fix</span>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={handleCompare}
-              className="px-5 py-2 bg-blue-500 text-white rounded-lg text-sm font-semibold hover:bg-blue-600 transition"
-            >
-              Routen vergleichen
-            </button>
-            <button
-              onClick={handleClear}
-              className="px-5 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-300 transition"
-            >
-              Leeren
-            </button>
-          </div>
+            <button class="btn" onclick="updateMaps()">Routen vergleichen</button>
+            <button class="btn btn-secondary" onclick="clearInputs()">Leeren</button>
         </div>
-
-        {/* Maps Grid */}
-        {showMaps && (
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            {/* Column Headers */}
-            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
-              <h2 className="font-semibold text-gray-800">2025 → Presta</h2>
-              <span className="inline-block px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-xs font-semibold mt-1">Bisherig</span>
+        
+        <div class="comparison-grid">
+            <div class="column-header">
+                <h2>2025 Wohnadresse → Presta</h2>
+                <span class="badge badge-2025">Bisherige Berechnung</span>
+                <div class="tech-note">Routing via Mapbox (bis Dez 2025)</div>
             </div>
-            <div className="bg-white rounded-xl p-4 shadow-sm text-center">
-              <h2 className="font-semibold text-gray-800">2026 → Presta</h2>
-              <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold mt-1">Neu</span>
+            <div class="column-header">
+                <h2>2026 Wohnadresse → Presta</h2>
+                <span class="badge badge-2026">Neue Berechnung</span>
+                <div class="tech-note">Routing via Google Maps (ab Dez 2025)</div>
             </div>
-
-            {/* Car Maps */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
-                <span>🚗</span>
-                <span className="font-semibold text-sm text-gray-800">Mit dem Auto</span>
-              </div>
-              <iframe
-                src={getEmbedUrl(origin2025, 'driving')}
-                className="w-full h-64 border-0"
-                allowFullScreen
-                loading="lazy"
-              />
-              <div className="p-2 border-t border-gray-100">
-                <a
-                  href={getDirectUrl(origin2025, 'driving')}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block text-center py-2 bg-gray-100 rounded-lg text-blue-500 text-xs font-medium hover:bg-blue-50"
-                >
-                  In Google Maps öffnen
-                </a>
-              </div>
+            
+            <!-- Car routes -->
+            <div class="map-card">
+                <div class="map-card-header">
+                    <span class="icon">🚗</span>
+                    <h3>Mit dem Auto</h3>
+                </div>
+                <div id="map2025car" class="map-placeholder">Koordinaten eingeben und "Routen vergleichen" klicken</div>
+                <div class="direct-links" id="links2025car" style="display: none;">
+                    <a href="#" target="_blank" id="link2025car">In Google Maps öffnen</a>
+                </div>
             </div>
-
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
-                <span>🚗</span>
-                <span className="font-semibold text-sm text-gray-800">Mit dem Auto</span>
-              </div>
-              <iframe
-                src={getEmbedUrl(origin2026, 'driving')}
-                className="w-full h-64 border-0"
-                allowFullScreen
-                loading="lazy"
-              />
-              <div className="p-2 border-t border-gray-100">
-                <a
-                  href={getDirectUrl(origin2026, 'driving')}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block text-center py-2 bg-gray-100 rounded-lg text-blue-500 text-xs font-medium hover:bg-blue-50"
-                >
-                  In Google Maps öffnen
-                </a>
-              </div>
+            
+            <div class="map-card">
+                <div class="map-card-header">
+                    <span class="icon">🚗</span>
+                    <h3>Mit dem Auto</h3>
+                </div>
+                <div id="map2026car" class="map-placeholder">Koordinaten eingeben und "Routen vergleichen" klicken</div>
+                <div class="direct-links" id="links2026car" style="display: none;">
+                    <a href="#" target="_blank" id="link2026car">In Google Maps öffnen</a>
+                </div>
             </div>
-
-            {/* Transit Maps */}
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
-                <span>🚆</span>
-                <span className="font-semibold text-sm text-gray-800">Mit ÖV</span>
-              </div>
-              <iframe
-                src={getEmbedUrl(origin2025, 'transit')}
-                className="w-full h-64 border-0"
-                allowFullScreen
-                loading="lazy"
-              />
-              <div className="p-2 border-t border-gray-100">
-                <a
-                  href={getDirectUrl(origin2025, 'transit')}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block text-center py-2 bg-gray-100 rounded-lg text-blue-500 text-xs font-medium hover:bg-blue-50"
-                >
-                  In Google Maps öffnen
-                </a>
-              </div>
+            
+            <!-- Transit routes -->
+            <div class="map-card">
+                <div class="map-card-header">
+                    <span class="icon">🚆</span>
+                    <h3>Mit ÖV</h3>
+                </div>
+                <div id="map2025transit" class="map-placeholder">Koordinaten eingeben und "Routen vergleichen" klicken</div>
+                <div class="direct-links" id="links2025transit" style="display: none;">
+                    <a href="#" target="_blank" id="link2025transit">In Google Maps öffnen</a>
+                </div>
             </div>
-
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
-                <span>🚆</span>
-                <span className="font-semibold text-sm text-gray-800">Mit ÖV</span>
-              </div>
-              <iframe
-                src={getEmbedUrl(origin2026, 'transit')}
-                className="w-full h-64 border-0"
-                allowFullScreen
-                loading="lazy"
-              />
-              <div className="p-2 border-t border-gray-100">
-                <a
-                  href={getDirectUrl(origin2026, 'transit')}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block text-center py-2 bg-gray-100 rounded-lg text-blue-500 text-xs font-medium hover:bg-blue-50"
-                >
-                  In Google Maps öffnen
-                </a>
-              </div>
+            
+            <div class="map-card">
+                <div class="map-card-header">
+                    <span class="icon">🚆</span>
+                    <h3>Mit ÖV</h3>
+                </div>
+                <div id="map2026transit" class="map-placeholder">Koordinaten eingeben und "Routen vergleichen" klicken</div>
+                <div class="direct-links" id="links2026transit" style="display: none;">
+                    <a href="#" target="_blank" id="link2026transit">In Google Maps öffnen</a>
+                </div>
             </div>
-          </div>
-        )}
-
-        {/* Share URL */}
-        {showMaps && (
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <h3 className="font-semibold text-gray-800 mb-2 text-sm">📋 Teilbarer Link</h3>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={generateShareUrl()}
-                readOnly
-                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-xs font-mono bg-gray-50"
-              />
-              <button
-                onClick={handleCopy}
-                className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-semibold hover:bg-green-600 transition"
-              >
-                {copied ? 'Kopiert!' : 'Kopieren'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Footer */}
-        <div className="text-center mt-6 text-gray-500 text-xs">
-          Mehr Infos: <a href="https://www.my-mo.com/de/presta" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">my-mo.com/de/presta</a>
         </div>
-      </div>
+        
+        <div class="url-section">
+            <h3>📋 Teilbarer Link</h3>
+            <div class="url-box">
+                <input type="text" id="shareUrl" readonly placeholder="URL wird generiert nach Eingabe der Koordinaten">
+                <button class="copy-btn" onclick="copyUrl()">Kopieren</button>
+            </div>
+        </div>
+        
+        <div class="footer-note">
+            Mehr Infos zum Mobilitätskonzept: <a href="https://www.my-mo.com/de/presta" target="_blank">my-mo.com/de/presta</a>
+        </div>
     </div>
-  );
-}
+    
+    <script>
+        const DESTINATION = '47.207526,9.529024'; // Presta Eschen - fixed
+        
+        // Parse URL parameters on load
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                origin2025: params.get('origin2025') || '',
+                origin2026: params.get('origin2026') || ''
+            };
+        }
+        
+        // Clean coordinate input (remove spaces)
+        function cleanCoord(coord) {
+            return coord.replace(/\s+/g, '');
+        }
+        
+        // Generate Google Maps embed URL
+        function getEmbedUrl(origin, destination, mode) {
+            const cleanOrigin = cleanCoord(origin);
+            return `https://www.google.com/maps/embed/v1/directions?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&origin=${cleanOrigin}&destination=${destination}&mode=${mode}`;
+        }
+        
+        // Generate Google Maps direct link
+        function getDirectUrl(origin, destination, mode) {
+            const cleanOrigin = cleanCoord(origin);
+            return `https://www.google.com/maps/dir/?api=1&origin=${cleanOrigin}&destination=${destination}&travelmode=${mode}`;
+        }
+        
+        // Generate shareable URL
+        function generateShareUrl() {
+            const origin2025 = cleanCoord(document.getElementById('origin2025').value);
+            const origin2026 = cleanCoord(document.getElementById('origin2026').value);
+            
+            const baseUrl = window.location.origin + window.location.pathname;
+            const params = new URLSearchParams();
+            
+            if (origin2025) params.set('origin2025', origin2025);
+            if (origin2026) params.set('origin2026', origin2026);
+            
+            return baseUrl + '?' + params.toString();
+        }
+        
+        // Update all maps
+        function updateMaps() {
+            const origin2025 = document.getElementById('origin2025').value;
+            const origin2026 = document.getElementById('origin2026').value;
+            
+            if (!origin2025 || !origin2026) {
+                alert('Bitte beide Wohnadressen (2025 und 2026) eingeben');
+                return;
+            }
+            
+            // Update 2025 Car
+            document.getElementById('map2025car').innerHTML = 
+                `<iframe class="map-frame" src="${getEmbedUrl(origin2025, DESTINATION, 'driving')}" allowfullscreen loading="lazy"></iframe>`;
+            document.getElementById('links2025car').style.display = 'flex';
+            document.getElementById('link2025car').href = getDirectUrl(origin2025, DESTINATION, 'driving');
+            
+            // Update 2026 Car
+            document.getElementById('map2026car').innerHTML = 
+                `<iframe class="map-frame" src="${getEmbedUrl(origin2026, DESTINATION, 'driving')}" allowfullscreen loading="lazy"></iframe>`;
+            document.getElementById('links2026car').style.display = 'flex';
+            document.getElementById('link2026car').href = getDirectUrl(origin2026, DESTINATION, 'driving');
+            
+            // Update 2025 Transit
+            document.getElementById('map2025transit').innerHTML = 
+                `<iframe class="map-frame" src="${getEmbedUrl(origin2025, DESTINATION, 'transit')}" allowfullscreen loading="lazy"></iframe>`;
+            document.getElementById('links2025transit').style.display = 'flex';
+            document.getElementById('link2025transit').href = getDirectUrl(origin2025, DESTINATION, 'transit');
+            
+            // Update 2026 Transit
+            document.getElementById('map2026transit').innerHTML = 
+                `<iframe class="map-frame" src="${getEmbedUrl(origin2026, DESTINATION, 'transit')}" allowfullscreen loading="lazy"></iframe>`;
+            document.getElementById('links2026transit').style.display = 'flex';
+            document.getElementById('link2026transit').href = getDirectUrl(origin2026, DESTINATION, 'transit');
+            
+            // Update shareable URL
+            document.getElementById('shareUrl').value = generateShareUrl();
+            
+            // Update browser URL without reload
+            window.history.replaceState({}, '', generateShareUrl());
+        }
+        
+        function clearInputs() {
+            document.getElementById('origin2025').value = '';
+            document.getElementById('origin2026').value = '';
+            document.getElementById('shareUrl').value = '';
+            
+            // Reset map placeholders
+            const placeholder = 'Koordinaten eingeben und "Routen vergleichen" klicken';
+            ['map2025car', 'map2026car', 'map2025transit', 'map2026transit'].forEach(id => {
+                document.getElementById(id).innerHTML = placeholder;
+                document.getElementById(id).className = 'map-placeholder';
+            });
+            
+            // Hide links
+            ['links2025car', 'links2026car', 'links2025transit', 'links2026transit'].forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+            
+            // Clear URL params
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+        
+        function copyUrl() {
+            const urlInput = document.getElementById('shareUrl');
+            urlInput.select();
+            document.execCommand('copy');
+            
+            const btn = document.querySelector('.copy-btn');
+            btn.textContent = 'Kopiert!';
+            setTimeout(() => btn.textContent = 'Kopieren', 2000);
+        }
+        
+        // Initialize on page load
+        window.onload = function() {
+            const params = getUrlParams();
+            
+            if (params.origin2025) document.getElementById('origin2025').value = params.origin2025;
+            if (params.origin2026) document.getElementById('origin2026').value = params.origin2026;
+            
+            // Auto-load maps if both coordinates are present
+            if (params.origin2025 && params.origin2026) {
+                updateMaps();
+            }
+        };
+    </script>
+</body>
+</html>
