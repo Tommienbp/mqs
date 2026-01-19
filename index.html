@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MQS Route Comparison | Presta Mobility</title>
+    <title>Route Comparison</title>
     <style>
         * {
             box-sizing: border-box;
@@ -11,695 +11,113 @@
             padding: 0;
         }
         
-        body {
+        html, body {
+            height: 100%;
+            overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f5;
-            min-height: 100vh;
-            padding: 20px;
         }
         
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        
-        .header h1 {
-            color: #333;
-            font-size: 24px;
-            margin-bottom: 8px;
-        }
-        
-        .header .subtitle {
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .info-banner {
-            background: linear-gradient(135deg, #e8f4fd 0%, #f0e6ff 100%);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 24px;
-            border-left: 4px solid #4285f4;
-        }
-        
-        .info-banner h3 {
-            color: #1a73e8;
-            font-size: 16px;
-            margin-bottom: 12px;
-        }
-        
-        .info-banner p {
-            color: #444;
-            font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 8px;
-        }
-        
-        .change-reasons {
+        .grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 16px;
-        }
-        
-        .change-reason {
-            background: white;
-            border-radius: 8px;
-            padding: 12px;
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-        }
-        
-        .change-reason .icon {
-            font-size: 24px;
-            flex-shrink: 0;
-        }
-        
-        .change-reason .text h4 {
-            font-size: 13px;
-            color: #333;
-            margin-bottom: 4px;
-        }
-        
-        .change-reason .text p {
-            font-size: 12px;
-            color: #666;
-            margin: 0;
-        }
-        
-        .tariff-info {
-            background: white;
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .tariff-info h3 {
-            font-size: 14px;
-            color: #333;
-            margin-bottom: 12px;
-        }
-        
-        .tariff-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-        }
-        
-        .tariff-card {
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        
-        .tariff-a {
-            background: #ffebee;
-            border: 1px solid #ef9a9a;
-        }
-        
-        .tariff-b {
-            background: #fff3e0;
-            border: 1px solid #ffcc80;
-        }
-        
-        .tariff-c {
-            background: #e8f5e9;
-            border: 1px solid #a5d6a7;
-        }
-        
-        .tariff-card .price {
-            font-size: 20px;
-            font-weight: 700;
-            color: #333;
-        }
-        
-        .tariff-card .label {
-            font-size: 12px;
-            color: #666;
-            margin-top: 4px;
-        }
-        
-        .tariff-card .criteria {
-            font-size: 11px;
-            color: #888;
-            margin-top: 8px;
-            line-height: 1.4;
-        }
-        
-        .input-section {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .input-section h3 {
-            font-size: 14px;
-            color: #333;
-            margin-bottom: 16px;
-        }
-        
-        .input-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-        
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        
-        .input-group label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #555;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .input-group input {
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.2s;
-        }
-        
-        .input-group input:focus {
-            outline: none;
-            border-color: #4285f4;
-        }
-        
-        .input-group input:disabled {
-            background: #f5f5f5;
-            color: #666;
-        }
-        
-        .input-group .hint {
-            font-size: 11px;
-            color: #888;
-        }
-        
-        .btn {
-            background: #4285f4;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        
-        .btn:hover {
-            background: #3367d6;
-        }
-        
-        .btn-secondary {
-            background: #f1f3f4;
-            color: #333;
-            margin-left: 8px;
-        }
-        
-        .btn-secondary:hover {
-            background: #e8eaed;
-        }
-        
-        .comparison-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: auto 1fr 1fr;
-            gap: 16px;
-        }
-        
-        .column-header {
-            background: white;
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .column-header h2 {
-            font-size: 16px;
-            color: #333;
-            margin-bottom: 4px;
-        }
-        
-        .column-header .badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        
-        .badge-2025 {
-            background: #fce4ec;
-            color: #c2185b;
-        }
-        
-        .badge-2026 {
-            background: #e3f2fd;
-            color: #1565c0;
-        }
-        
-        .column-header .tech-note {
-            font-size: 11px;
-            color: #888;
-            margin-top: 8px;
+            grid-template-rows: 1fr 1fr;
+            height: 100vh;
+            width: 100vw;
         }
         
         .map-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
+            position: relative;
+            border: 1px solid #ddd;
         }
         
-        .map-card-header {
-            padding: 12px 16px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .map-card-header .icon {
-            font-size: 20px;
-        }
-        
-        .map-card-header h3 {
-            font-size: 14px;
-            color: #333;
+        .map-label {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(255,255,255,0.95);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
             font-weight: 600;
+            color: #333;
+            z-index: 10;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        
+        .label-2025 {
+            border-left: 3px solid #e91e63;
+        }
+        
+        .label-2026 {
+            border-left: 3px solid #2196f3;
         }
         
         .map-frame {
-            flex: 1;
-            min-height: 280px;
-            border: none;
             width: 100%;
             height: 100%;
+            border: none;
         }
         
-        .map-placeholder {
-            flex: 1;
-            min-height: 280px;
+        .placeholder {
+            width: 100%;
+            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #f9f9f9;
+            background: #f5f5f5;
             color: #999;
             font-size: 14px;
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .direct-links {
-            padding: 10px 16px;
-            border-top: 1px solid #eee;
-            display: flex;
-            gap: 8px;
-        }
-        
-        .direct-links a {
-            flex: 1;
-            text-align: center;
-            padding: 8px;
-            background: #f5f5f5;
-            border-radius: 6px;
-            text-decoration: none;
-            color: #4285f4;
-            font-size: 12px;
-            font-weight: 500;
-            transition: background 0.2s;
-        }
-        
-        .direct-links a:hover {
-            background: #e8f0fe;
-        }
-        
-        .url-section {
-            margin-top: 24px;
-            background: white;
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .url-section h3 {
-            font-size: 14px;
-            color: #333;
-            margin-bottom: 8px;
-        }
-        
-        .url-box {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .url-box input {
-            flex: 1;
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 12px;
-            font-family: monospace;
-            background: #f9f9f9;
-        }
-        
-        .copy-btn {
-            padding: 10px 16px;
-            background: #34a853;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .copy-btn:hover {
-            background: #2d8e47;
-        }
-        
-        .footer-note {
-            margin-top: 24px;
-            text-align: center;
-            color: #888;
-            font-size: 12px;
-        }
-        
-        .footer-note a {
-            color: #4285f4;
-        }
-        
-        @media (max-width: 900px) {
-            .comparison-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .input-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .change-reasons {
-                grid-template-columns: 1fr;
-            }
-            
-            .tariff-grid {
-                grid-template-columns: 1fr;
-            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🗺️ MQS Route Comparison</h1>
-            <p class="subtitle">Vergleiche deine Pendelstrecke 2025 vs. 2026 zu Presta</p>
+    <div class="grid">
+        <div class="map-card">
+            <div class="map-label label-2025">2025 🚗 Auto</div>
+            <div id="map2025car" class="placeholder">Keine Koordinaten</div>
         </div>
-        
-        <div class="info-banner">
-            <h3>ℹ️ Warum hat sich mein MQS geändert?</h3>
-            <p>Der Mobility Quality Score (MQS) bestimmt deinen Parktarif basierend auf deinen ÖV-Alternativen. Zwei Faktoren können zu Änderungen führen:</p>
-            
-            <div class="change-reasons">
-                <div class="change-reason">
-                    <span class="icon">🚂</span>
-                    <div class="text">
-                        <h4>Fahrplanwechsel (15. Dezember)</h4>
-                        <p>Neue ÖV-Verbindungen können deine Pendelzeit verbessern oder verschlechtern.</p>
-                    </div>
-                </div>
-                <div class="change-reason">
-                    <span class="icon">🗺️</span>
-                    <div class="text">
-                        <h4>Routing-Update: Mapbox → Google Maps</h4>
-                        <p>2026 verwenden wir Google Maps für genauere Routenberechnung. Dies kann zu unterschiedlichen Reisezeiten führen.</p>
-                    </div>
-                </div>
-            </div>
+        <div class="map-card">
+            <div class="map-label label-2026">2026 🚗 Auto</div>
+            <div id="map2026car" class="placeholder">Keine Koordinaten</div>
         </div>
-        
-        <div class="tariff-info">
-            <h3>📊 MQS Tarifstufen</h3>
-            <div class="tariff-grid">
-                <div class="tariff-card tariff-a">
-                    <div class="price">CHF 5.–</div>
-                    <div class="label">Tarif A</div>
-                    <div class="criteria">Gute ÖV-Alternativen<br>≤15 min oder ≤30% länger als Auto</div>
-                </div>
-                <div class="tariff-card tariff-b">
-                    <div class="price">CHF 3.–</div>
-                    <div class="label">Tarif B</div>
-                    <div class="criteria">Akzeptable ÖV-Verbindungen<br>≤2× Autozeit oder ≤10 km</div>
-                </div>
-                <div class="tariff-card tariff-c">
-                    <div class="price">CHF 1.–</div>
-                    <div class="label">Tarif C</div>
-                    <div class="criteria">Schichtarbeit oder<br>eingeschränkte ÖV-Alternativen</div>
-                </div>
-            </div>
+        <div class="map-card">
+            <div class="map-label label-2025">2025 🚆 ÖV</div>
+            <div id="map2025transit" class="placeholder">Keine Koordinaten</div>
         </div>
-        
-        <div class="input-section">
-            <h3>📍 Koordinaten eingeben</h3>
-            <div class="input-grid">
-                <div class="input-group">
-                    <label>2025 Wohnadresse (lat, lng)</label>
-                    <input type="text" id="origin2025" placeholder="z.B. 47.235761, 9.631085">
-                    <span class="hint">Mapbox-basierte Berechnung</span>
-                </div>
-                <div class="input-group">
-                    <label>2026 Wohnadresse (lat, lng)</label>
-                    <input type="text" id="origin2026" placeholder="z.B. 47.240000, 9.640000">
-                    <span class="hint">Google Maps-basierte Berechnung</span>
-                </div>
-                <div class="input-group">
-                    <label>Ziel: Presta Eschen</label>
-                    <input type="text" id="destination" value="47.207526, 9.529024" disabled>
-                    <span class="hint">Presta Haupteingang (fix)</span>
-                </div>
-            </div>
-            <button class="btn" onclick="updateMaps()">Routen vergleichen</button>
-            <button class="btn btn-secondary" onclick="clearInputs()">Leeren</button>
-        </div>
-        
-        <div class="comparison-grid">
-            <div class="column-header">
-                <h2>2025 Wohnadresse → Presta</h2>
-                <span class="badge badge-2025">Bisherige Berechnung</span>
-                <div class="tech-note">Routing via Mapbox (bis Dez 2025)</div>
-            </div>
-            <div class="column-header">
-                <h2>2026 Wohnadresse → Presta</h2>
-                <span class="badge badge-2026">Neue Berechnung</span>
-                <div class="tech-note">Routing via Google Maps (ab Dez 2025)</div>
-            </div>
-            
-            <!-- Car routes -->
-            <div class="map-card">
-                <div class="map-card-header">
-                    <span class="icon">🚗</span>
-                    <h3>Mit dem Auto</h3>
-                </div>
-                <div id="map2025car" class="map-placeholder">Koordinaten eingeben und "Routen vergleichen" klicken</div>
-                <div class="direct-links" id="links2025car" style="display: none;">
-                    <a href="#" target="_blank" id="link2025car">In Google Maps öffnen</a>
-                </div>
-            </div>
-            
-            <div class="map-card">
-                <div class="map-card-header">
-                    <span class="icon">🚗</span>
-                    <h3>Mit dem Auto</h3>
-                </div>
-                <div id="map2026car" class="map-placeholder">Koordinaten eingeben und "Routen vergleichen" klicken</div>
-                <div class="direct-links" id="links2026car" style="display: none;">
-                    <a href="#" target="_blank" id="link2026car">In Google Maps öffnen</a>
-                </div>
-            </div>
-            
-            <!-- Transit routes -->
-            <div class="map-card">
-                <div class="map-card-header">
-                    <span class="icon">🚆</span>
-                    <h3>Mit ÖV</h3>
-                </div>
-                <div id="map2025transit" class="map-placeholder">Koordinaten eingeben und "Routen vergleichen" klicken</div>
-                <div class="direct-links" id="links2025transit" style="display: none;">
-                    <a href="#" target="_blank" id="link2025transit">In Google Maps öffnen</a>
-                </div>
-            </div>
-            
-            <div class="map-card">
-                <div class="map-card-header">
-                    <span class="icon">🚆</span>
-                    <h3>Mit ÖV</h3>
-                </div>
-                <div id="map2026transit" class="map-placeholder">Koordinaten eingeben und "Routen vergleichen" klicken</div>
-                <div class="direct-links" id="links2026transit" style="display: none;">
-                    <a href="#" target="_blank" id="link2026transit">In Google Maps öffnen</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="url-section">
-            <h3>📋 Teilbarer Link</h3>
-            <div class="url-box">
-                <input type="text" id="shareUrl" readonly placeholder="URL wird generiert nach Eingabe der Koordinaten">
-                <button class="copy-btn" onclick="copyUrl()">Kopieren</button>
-            </div>
-        </div>
-        
-        <div class="footer-note">
-            Mehr Infos zum Mobilitätskonzept: <a href="https://www.my-mo.com/de/presta" target="_blank">my-mo.com/de/presta</a>
+        <div class="map-card">
+            <div class="map-label label-2026">2026 🚆 ÖV</div>
+            <div id="map2026transit" class="placeholder">Keine Koordinaten</div>
         </div>
     </div>
     
     <script>
-        const DESTINATION = '47.207526,9.529024'; // Presta Eschen - fixed
+        const DESTINATION = '47.207526,9.529024';
         
-        // Parse URL parameters on load
-        function getUrlParams() {
+        function getEmbedUrl(origin, mode) {
+            return `https://www.google.com/maps/embed/v1/directions?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&origin=${origin}&destination=${DESTINATION}&mode=${mode}`;
+        }
+        
+        function init() {
             const params = new URLSearchParams(window.location.search);
-            return {
-                origin2025: params.get('origin2025') || '',
-                origin2026: params.get('origin2026') || ''
-            };
-        }
-        
-        // Clean coordinate input (remove spaces)
-        function cleanCoord(coord) {
-            return coord.replace(/\s+/g, '');
-        }
-        
-        // Generate Google Maps embed URL
-        function getEmbedUrl(origin, destination, mode) {
-            const cleanOrigin = cleanCoord(origin);
-            return `https://www.google.com/maps/embed/v1/directions?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&origin=${cleanOrigin}&destination=${destination}&mode=${mode}`;
-        }
-        
-        // Generate Google Maps direct link
-        function getDirectUrl(origin, destination, mode) {
-            const cleanOrigin = cleanCoord(origin);
-            return `https://www.google.com/maps/dir/?api=1&origin=${cleanOrigin}&destination=${destination}&travelmode=${mode}`;
-        }
-        
-        // Generate shareable URL
-        function generateShareUrl() {
-            const origin2025 = cleanCoord(document.getElementById('origin2025').value);
-            const origin2026 = cleanCoord(document.getElementById('origin2026').value);
+            const origin2025 = params.get('origin2025');
+            const origin2026 = params.get('origin2026');
             
-            const baseUrl = window.location.origin + window.location.pathname;
-            const params = new URLSearchParams();
-            
-            if (origin2025) params.set('origin2025', origin2025);
-            if (origin2026) params.set('origin2026', origin2026);
-            
-            return baseUrl + '?' + params.toString();
-        }
-        
-        // Update all maps
-        function updateMaps() {
-            const origin2025 = document.getElementById('origin2025').value;
-            const origin2026 = document.getElementById('origin2026').value;
-            
-            if (!origin2025 || !origin2026) {
-                alert('Bitte beide Wohnadressen (2025 und 2026) eingeben');
-                return;
+            if (origin2025) {
+                document.getElementById('map2025car').innerHTML = 
+                    `<iframe class="map-frame" src="${getEmbedUrl(origin2025, 'driving')}" allowfullscreen loading="lazy"></iframe>`;
+                document.getElementById('map2025transit').innerHTML = 
+                    `<iframe class="map-frame" src="${getEmbedUrl(origin2025, 'transit')}" allowfullscreen loading="lazy"></iframe>`;
             }
             
-            // Update 2025 Car
-            document.getElementById('map2025car').innerHTML = 
-                `<iframe class="map-frame" src="${getEmbedUrl(origin2025, DESTINATION, 'driving')}" allowfullscreen loading="lazy"></iframe>`;
-            document.getElementById('links2025car').style.display = 'flex';
-            document.getElementById('link2025car').href = getDirectUrl(origin2025, DESTINATION, 'driving');
-            
-            // Update 2026 Car
-            document.getElementById('map2026car').innerHTML = 
-                `<iframe class="map-frame" src="${getEmbedUrl(origin2026, DESTINATION, 'driving')}" allowfullscreen loading="lazy"></iframe>`;
-            document.getElementById('links2026car').style.display = 'flex';
-            document.getElementById('link2026car').href = getDirectUrl(origin2026, DESTINATION, 'driving');
-            
-            // Update 2025 Transit
-            document.getElementById('map2025transit').innerHTML = 
-                `<iframe class="map-frame" src="${getEmbedUrl(origin2025, DESTINATION, 'transit')}" allowfullscreen loading="lazy"></iframe>`;
-            document.getElementById('links2025transit').style.display = 'flex';
-            document.getElementById('link2025transit').href = getDirectUrl(origin2025, DESTINATION, 'transit');
-            
-            // Update 2026 Transit
-            document.getElementById('map2026transit').innerHTML = 
-                `<iframe class="map-frame" src="${getEmbedUrl(origin2026, DESTINATION, 'transit')}" allowfullscreen loading="lazy"></iframe>`;
-            document.getElementById('links2026transit').style.display = 'flex';
-            document.getElementById('link2026transit').href = getDirectUrl(origin2026, DESTINATION, 'transit');
-            
-            // Update shareable URL
-            document.getElementById('shareUrl').value = generateShareUrl();
-            
-            // Update browser URL without reload
-            window.history.replaceState({}, '', generateShareUrl());
-        }
-        
-        function clearInputs() {
-            document.getElementById('origin2025').value = '';
-            document.getElementById('origin2026').value = '';
-            document.getElementById('shareUrl').value = '';
-            
-            // Reset map placeholders
-            const placeholder = 'Koordinaten eingeben und "Routen vergleichen" klicken';
-            ['map2025car', 'map2026car', 'map2025transit', 'map2026transit'].forEach(id => {
-                document.getElementById(id).innerHTML = placeholder;
-                document.getElementById(id).className = 'map-placeholder';
-            });
-            
-            // Hide links
-            ['links2025car', 'links2026car', 'links2025transit', 'links2026transit'].forEach(id => {
-                document.getElementById(id).style.display = 'none';
-            });
-            
-            // Clear URL params
-            window.history.replaceState({}, '', window.location.pathname);
-        }
-        
-        function copyUrl() {
-            const urlInput = document.getElementById('shareUrl');
-            urlInput.select();
-            document.execCommand('copy');
-            
-            const btn = document.querySelector('.copy-btn');
-            btn.textContent = 'Kopiert!';
-            setTimeout(() => btn.textContent = 'Kopieren', 2000);
-        }
-        
-        // Initialize on page load
-        window.onload = function() {
-            const params = getUrlParams();
-            
-            if (params.origin2025) document.getElementById('origin2025').value = params.origin2025;
-            if (params.origin2026) document.getElementById('origin2026').value = params.origin2026;
-            
-            // Auto-load maps if both coordinates are present
-            if (params.origin2025 && params.origin2026) {
-                updateMaps();
+            if (origin2026) {
+                document.getElementById('map2026car').innerHTML = 
+                    `<iframe class="map-frame" src="${getEmbedUrl(origin2026, 'driving')}" allowfullscreen loading="lazy"></iframe>`;
+                document.getElementById('map2026transit').innerHTML = 
+                    `<iframe class="map-frame" src="${getEmbedUrl(origin2026, 'transit')}" allowfullscreen loading="lazy"></iframe>`;
             }
-        };
+        }
+        
+        window.onload = init;
     </script>
 </body>
 </html>
