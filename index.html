@@ -233,8 +233,14 @@
         
         function fetchDuration(origin, mode, badgeId) {
             const originLatLng = parseOrigin(origin);
-            const directionsService = new google.maps.DirectionsService();
+            const badge = document.getElementById(badgeId);
             
+            // Show loading state
+            badge.querySelector('.duration-time').textContent = '...';
+            badge.querySelector('.duration-distance').textContent = 'Laden';
+            badge.style.display = 'block';
+            
+            const directionsService = new google.maps.DirectionsService();
             const travelMode = mode === 'driving' ? google.maps.TravelMode.DRIVING : google.maps.TravelMode.TRANSIT;
             
             directionsService.route({
@@ -244,10 +250,12 @@
             }, function(result, status) {
                 if (status === 'OK') {
                     const leg = result.routes[0].legs[0];
-                    const badge = document.getElementById(badgeId);
                     badge.querySelector('.duration-time').textContent = leg.duration.text;
                     badge.querySelector('.duration-distance').textContent = leg.distance.text;
-                    badge.style.display = 'block';
+                } else {
+                    console.error('Directions API error:', status);
+                    badge.querySelector('.duration-time').textContent = '—';
+                    badge.querySelector('.duration-distance').textContent = 'API Fehler';
                 }
             });
         }
