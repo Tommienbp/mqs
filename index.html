@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MQS Route Comparison</title>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
     <style>
         * {
             box-sizing: border-box;
@@ -40,7 +41,7 @@
             font-size: 14px;
             font-weight: 600;
             color: #333;
-            z-index: 10;
+            z-index: 1000;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             line-height: 1.5;
             max-width: 220px;
@@ -85,6 +86,24 @@
             color: #333;
         }
         
+        .duration-badge {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            z-index: 1000;
+        }
+        
+        .mapbox-container {
+            width: 100%;
+            height: 100%;
+        }
+        
         .map-frame {
             width: 100%;
             height: 100%;
@@ -105,7 +124,7 @@
 </head>
 <body>
     <div class="grid">
-        <!-- 2025 Car -->
+        <!-- 2025 Car - Mapbox -->
         <div class="map-card">
             <div class="map-label label-2025">
                 <div class="label-row">
@@ -117,10 +136,11 @@
                     <div><strong>Ankunft:</strong> Mo 15. Dez, 08:00</div>
                 </div>
             </div>
-            <div id="map2025car" class="placeholder">Keine Koordinaten</div>
+            <div id="map2025car" class="mapbox-container"></div>
+            <div id="duration2025car" class="duration-badge" style="display:none;"></div>
         </div>
         
-        <!-- 2026 Car -->
+        <!-- 2026 Car - Google -->
         <div class="map-card">
             <div class="map-label label-2026">
                 <div class="label-row">
@@ -135,7 +155,7 @@
             <div id="map2026car" class="placeholder">Keine Koordinaten</div>
         </div>
         
-        <!-- 2025 Transit -->
+        <!-- 2025 Transit - Mapbox -->
         <div class="map-card">
             <div class="map-label label-2025">
                 <div class="label-row">
@@ -148,10 +168,11 @@
                     <div><strong>Ankunft:</strong> Mo 15. Dez, 08:00</div>
                 </div>
             </div>
-            <div id="map2025transit" class="placeholder">Keine Koordinaten</div>
+            <div id="map2025transit" class="mapbox-container"></div>
+            <div id="duration2025transit" class="duration-badge" style="display:none;"></div>
         </div>
         
-        <!-- 2026 Transit -->
+        <!-- 2026 Transit - Google -->
         <div class="map-card">
             <div class="map-label label-2026">
                 <div class="label-row">
@@ -169,26 +190,121 @@
     </div>
     
     <script>
+        // API Keys
+        const MAPBOX_TOKEN = 'pk.eyJ1IjoidG9tbWllbmJwIiwiYSI6ImNta2xrN2hpeDA1N2EzZnNhMXFtaDI5Z3kifQ.NOxeO1pxqPXIWb7M1a-gsg';
         const GOOGLE_KEY = 'AIzaSyBsuxnhxPj6ENsMXY7T7xE6NqU_xXrawmk';
-        const DESTINATION = '47.207526,9.529024';
         
-        function getGoogleEmbedUrl(origin, mode) {
-            return `https://www.google.com/maps/embed/v1/directions?key=${GOOGLE_KEY}&origin=${origin}&destination=${DESTINATION}&mode=${mode}`;
+        // Destination: Presta Eschen
+        const DESTINATION_MAPBOX = [9.529024, 47.207526]; // [lng, lat]
+        const DESTINATION_GOOGLE = '47.207526,9.529024'; // lat,lng
+        
+        // Parse "lat,lng" to [lng, lat] for Mapbox
+        function parseCoords(str) {
+            const parts = str.split(',').map(s => parseFloat(s.trim()));
+            return [parts[1], parts[0]];
         }
         
+        // Google Maps Embed URL
+        function getGoogleEmbedUrl(origin, mode) {
+            return `https://www.google.com/maps/embed/v1/directions?key=${GOOGLE_KEY}&origin=${origin}&destination=${DESTINATION_GOOGLE}&mode=${mode}`;
+        }
+        
+        // Create Mapbox map with route
+        async function createMapboxMap(containerId, origin, mode, durationBadgeId) {
+            const originCoords = parseCoords(origin);
+            const profile = mode === 'driving' ? 'mapbox/driving' : 'mapbox/driving'; // Mapbox doesn't have transit
+            
+            const map = new mapboxgl.Map({
+                container: containerId,
+                style: 'mapbox://styles/mapbox/streets-v12',
+                center: [(originCoords[0] + DESTINATION_MAPBOX[0]) / 2, (originCoords[1] + DESTINATION_MAPBOX[1]) / 2],
+                zoom: 10
+            });
+            
+            map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+            
+            // Fetch route
+            const url = `https://api.mapbox.com/directions/v5/${profile}/${originCoords[0]},${originCoords[1]};${DESTINATION_MAPBOX[0]},${DESTINATION_MAPBOX[1]}?geometries=geojson&overview=full&access_token=${MAPBOX_TOKEN}`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.routes && data.routes.length > 0) {
+                    const route = data.routes[0];
+                    
+                    map.on('load', function() {
+                        // Add route line
+                        map.addSource('route', {
+                            type: 'geojson',
+                            data: {
+                                type: 'Feature',
+                                properties: {},
+                                geometry: route.geometry
+                            }
+                        });
+                        
+                        map.addLayer({
+                            id: 'route',
+                            type: 'line',
+                            source: 'route',
+                            layout: {
+                                'line-join': 'round',
+                                'line-cap': 'round'
+                            },
+                            paint: {
+                                'line-color': '#e91e63',
+                                'line-width': 5,
+                                'line-opacity': 0.8
+                            }
+                        });
+                        
+                        // Markers
+                        new mapboxgl.Marker({ color: '#22c55e' })
+                            .setLngLat(originCoords)
+                            .addTo(map);
+                        
+                        new mapboxgl.Marker({ color: '#ef4444' })
+                            .setLngLat(DESTINATION_MAPBOX)
+                            .addTo(map);
+                        
+                        // Fit bounds
+                        const bounds = route.geometry.coordinates.reduce(
+                            (bounds, coord) => bounds.extend(coord),
+                            new mapboxgl.LngLatBounds(route.geometry.coordinates[0], route.geometry.coordinates[0])
+                        );
+                        map.fitBounds(bounds, { padding: 60 });
+                    });
+                    
+                    // Duration badge
+                    const durationMin = Math.round(route.duration / 60);
+                    const distanceKm = (route.distance / 1000).toFixed(1);
+                    const badge = document.getElementById(durationBadgeId);
+                    badge.textContent = `${durationMin} min · ${distanceKm} km`;
+                    badge.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Mapbox routing error:', error);
+                document.getElementById(containerId).innerHTML = '<div class="placeholder">Fehler beim Laden</div>';
+            }
+        }
+        
+        // Initialize
         function init() {
+            mapboxgl.accessToken = MAPBOX_TOKEN;
+            
             const params = new URLSearchParams(window.location.search);
             const origin2025 = params.get('origin2025');
             const origin2026 = params.get('origin2026');
             
             if (origin2025) {
-                document.getElementById('map2025car').innerHTML = 
-                    `<iframe class="map-frame" src="${getGoogleEmbedUrl(origin2025, 'driving')}" allowfullscreen loading="lazy"></iframe>`;
-                document.getElementById('map2025transit').innerHTML = 
-                    `<iframe class="map-frame" src="${getGoogleEmbedUrl(origin2025, 'transit')}" allowfullscreen loading="lazy"></iframe>`;
+                // 2025 - Mapbox
+                createMapboxMap('map2025car', origin2025, 'driving', 'duration2025car');
+                createMapboxMap('map2025transit', origin2025, 'transit', 'duration2025transit');
             }
             
             if (origin2026) {
+                // 2026 - Google
                 document.getElementById('map2026car').innerHTML = 
                     `<iframe class="map-frame" src="${getGoogleEmbedUrl(origin2026, 'driving')}" allowfullscreen loading="lazy"></iframe>`;
                 document.getElementById('map2026transit').innerHTML = 
@@ -196,7 +312,19 @@
             }
         }
         
-        window.onload = init;
+        // Load Mapbox script dynamically
+        var script = document.createElement('script');
+        script.src = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js';
+        script.onload = function() {
+            console.log('Mapbox loaded successfully');
+            init();
+        };
+        script.onerror = function() {
+            console.error('Failed to load Mapbox');
+            document.getElementById('map2025car').innerHTML = '<div class="placeholder">Mapbox konnte nicht geladen werden</div>';
+            document.getElementById('map2025transit').innerHTML = '<div class="placeholder">Mapbox konnte nicht geladen werden</div>';
+        };
+        document.head.appendChild(script);
     </script>
 </body>
 </html>
