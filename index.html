@@ -243,76 +243,19 @@
             return `https://www.google.com/maps/embed/v1/directions?key=${GOOGLE_KEY}&origin=${origin}&destination=${DESTINATION.lat},${DESTINATION.lng}&mode=${mode}`;
         }
         
-        // Create a simple map with just origin and destination markers (no route)
-        function createMarkersOnlyMap(containerId, origin) {
-            const originLatLng = parseOrigin(origin);
+        // Create a static map image with origin and destination markers (no route)
+        function createStaticMap(containerId, origin) {
+            const container = document.getElementById(containerId);
+            const width = Math.min(container.offsetWidth || 800, 640);
+            const height = Math.min(container.offsetHeight || 600, 640);
             
-            const map = new google.maps.Map(document.getElementById(containerId), {
-                zoom: 10,
-                center: {
-                    lat: (originLatLng.lat + DESTINATION.lat) / 2,
-                    lng: (originLatLng.lng + DESTINATION.lng) / 2
-                },
-                mapTypeControl: false,
-                streetViewControl: false,
-                fullscreenControl: false
-            });
+            // Static Maps API URL with two markers
+            const staticUrl = `https://maps.googleapis.com/maps/api/staticmap?size=${width}x${height}&scale=2`
+                + `&markers=color:green%7Clabel:A%7C${origin}`
+                + `&markers=color:red%7Clabel:B%7C${DESTINATION.lat},${DESTINATION.lng}`
+                + `&key=${GOOGLE_KEY}`;
             
-            // Origin marker (green - home)
-            new google.maps.Marker({
-                position: originLatLng,
-                map: map,
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 12,
-                    fillColor: '#22c55e',
-                    fillOpacity: 1,
-                    strokeColor: '#fff',
-                    strokeWeight: 3
-                },
-                title: 'Wohnadresse 2025'
-            });
-            
-            // Destination marker (red - work)
-            new google.maps.Marker({
-                position: DESTINATION,
-                map: map,
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 12,
-                    fillColor: '#ef4444',
-                    fillOpacity: 1,
-                    strokeColor: '#fff',
-                    strokeWeight: 3
-                },
-                title: 'Thyssenkrupp Presta'
-            });
-            
-            // Draw a simple dashed line between them
-            new google.maps.Polyline({
-                path: [originLatLng, DESTINATION],
-                geodesic: true,
-                strokeColor: '#666',
-                strokeOpacity: 0,
-                strokeWeight: 0,
-                icons: [{
-                    icon: {
-                        path: 'M 0,-1 0,1',
-                        strokeOpacity: 0.6,
-                        strokeColor: '#e91e63',
-                        scale: 3
-                    },
-                    offset: '0',
-                    repeat: '15px'
-                }],
-                map: map
-            });
-            
-            // Fit bounds to show both markers
-            const bounds = new google.maps.LatLngBounds();
-            bounds.extend(originLatLng);
-            bounds.extend(DESTINATION);
-            map.fitBounds(bounds, 60);
+            container.innerHTML = `<img src="${staticUrl}" style="width:100%;height:100%;object-fit:cover;" alt="Map 2025">`;
         }
         
         function init() {
@@ -326,10 +269,10 @@
             const car2026sec = params.get('car2026');
             const ov2026sec = params.get('ov2026');
             
-            // 2025: Markers only + historical times
+            // 2025: Static map with markers only + historical times
             if (origin2025) {
-                createMarkersOnlyMap('map2025car', origin2025);
-                createMarkersOnlyMap('map2025transit', origin2025);
+                createStaticMap('map2025car', origin2025);
+                createStaticMap('map2025transit', origin2025);
             }
             
             // 2026: Google Maps Embed with routes
@@ -365,7 +308,7 @@
                 }
             }
         }
+        window.onload = init;
     </script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBsuxnhxPj6ENsMXY7T7xE6NqU_xXrawmk&callback=init"></script>
 </body>
 </html>
