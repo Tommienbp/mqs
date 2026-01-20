@@ -102,9 +102,9 @@
             font-weight: 700;
         }
         
-        .duration-distance {
-            font-size: 14px;
-            opacity: 0.85;
+        .duration-source {
+            font-size: 11px;
+            opacity: 0.7;
             margin-top: 4px;
         }
         
@@ -114,6 +114,11 @@
         
         .duration-badge.badge-2026 {
             border-left: 5px solid #2196f3;
+        }
+        
+        .map-container {
+            width: 100%;
+            height: 100%;
         }
         
         .map-frame {
@@ -148,10 +153,10 @@
                     <div><strong>Ankunft:</strong> Mo 15. Dez, 08:30</div>
                 </div>
             </div>
-            <div id="map2025car" class="placeholder">Keine Koordinaten</div>
-            <div id="duration2025car" class="duration-badge badge-2025" style="display:none;">
-                <div class="duration-time"></div>
-                <div class="duration-distance"></div>
+            <div id="map2025car" class="map-container"></div>
+            <div id="duration2025car" class="duration-badge badge-2025">
+                <div class="duration-time">--</div>
+                <div class="duration-source">MQS Berechnung 2025</div>
             </div>
         </div>
         
@@ -167,10 +172,10 @@
                     <div><strong>Ankunft:</strong> Mo 19. Jan, 08:30</div>
                 </div>
             </div>
-            <div id="map2026car" class="placeholder">Keine Koordinaten</div>
-            <div id="duration2026car" class="duration-badge badge-2026" style="display:none;">
-                <div class="duration-time"></div>
-                <div class="duration-distance"></div>
+            <div id="map2026car" class="map-container"></div>
+            <div id="duration2026car" class="duration-badge badge-2026">
+                <div class="duration-time">--</div>
+                <div class="duration-source">MQS Berechnung 2026</div>
             </div>
         </div>
         
@@ -185,13 +190,12 @@
                     <div><strong>Koordinaten:</strong> Mapbox</div>
                     <div><strong>Fahrplan:</strong> vor Wechsel</div>
                     <div><strong>Ankunft:</strong> Mo 15. Dez, 07:30–08:30</div>
-                    <div style="font-size:10px; color:#888;">(schnellste Verbindung)</div>
                 </div>
             </div>
-            <div id="map2025transit" class="placeholder">Keine Koordinaten</div>
-            <div id="duration2025transit" class="duration-badge badge-2025" style="display:none;">
-                <div class="duration-time"></div>
-                <div class="duration-distance"></div>
+            <div id="map2025transit" class="map-container"></div>
+            <div id="duration2025transit" class="duration-badge badge-2025">
+                <div class="duration-time">--</div>
+                <div class="duration-source">MQS Berechnung 2025</div>
             </div>
         </div>
         
@@ -206,58 +210,109 @@
                     <div><strong>Koordinaten:</strong> Google Maps</div>
                     <div><strong>Fahrplan:</strong> nach Wechsel</div>
                     <div><strong>Ankunft:</strong> Mo 19. Jan, 07:30–08:30</div>
-                    <div style="font-size:10px; color:#888;">(schnellste Verbindung)</div>
                 </div>
             </div>
-            <div id="map2026transit" class="placeholder">Keine Koordinaten</div>
-            <div id="duration2026transit" class="duration-badge badge-2026" style="display:none;">
-                <div class="duration-time"></div>
-                <div class="duration-distance"></div>
+            <div id="map2026transit" class="map-container"></div>
+            <div id="duration2026transit" class="duration-badge badge-2026">
+                <div class="duration-time">--</div>
+                <div class="duration-source">MQS Berechnung 2026</div>
             </div>
         </div>
     </div>
     
     <script>
         const GOOGLE_KEY = 'AIzaSyBsuxnhxPj6ENsMXY7T7xE6NqU_xXrawmk';
-        const DESTINATION = '47.207526,9.529024';
-        const DESTINATION_LATLNG = { lat: 47.207526, lng: 9.529024 };
+        const DESTINATION = { lat: 47.207526, lng: 9.529024 };
         
         function parseOrigin(str) {
             const parts = str.split(',').map(s => parseFloat(s.trim()));
             return { lat: parts[0], lng: parts[1] };
         }
         
-        function getGoogleEmbedUrl(origin, mode) {
-            return `https://www.google.com/maps/embed/v1/directions?key=${GOOGLE_KEY}&origin=${origin}&destination=${DESTINATION}&mode=${mode}`;
+        function formatSeconds(seconds) {
+            const mins = Math.round(seconds / 60);
+            if (mins >= 60) {
+                const hours = Math.floor(mins / 60);
+                const remainMins = mins % 60;
+                return `${hours} h ${remainMins} min`;
+            }
+            return `${mins} min`;
         }
         
-        function fetchDuration(origin, mode, badgeId) {
+        function getGoogleEmbedUrl(origin, mode) {
+            return `https://www.google.com/maps/embed/v1/directions?key=${GOOGLE_KEY}&origin=${origin}&destination=${DESTINATION.lat},${DESTINATION.lng}&mode=${mode}`;
+        }
+        
+        // Create a simple map with just origin and destination markers (no route)
+        function createMarkersOnlyMap(containerId, origin) {
             const originLatLng = parseOrigin(origin);
-            const badge = document.getElementById(badgeId);
             
-            // Show loading state
-            badge.querySelector('.duration-time').textContent = '...';
-            badge.querySelector('.duration-distance').textContent = 'Laden';
-            badge.style.display = 'block';
-            
-            const directionsService = new google.maps.DirectionsService();
-            const travelMode = mode === 'driving' ? google.maps.TravelMode.DRIVING : google.maps.TravelMode.TRANSIT;
-            
-            directionsService.route({
-                origin: originLatLng,
-                destination: DESTINATION_LATLNG,
-                travelMode: travelMode
-            }, function(result, status) {
-                if (status === 'OK') {
-                    const leg = result.routes[0].legs[0];
-                    badge.querySelector('.duration-time').textContent = leg.duration.text;
-                    badge.querySelector('.duration-distance').textContent = leg.distance.text;
-                } else {
-                    console.error('Directions API error:', status);
-                    badge.querySelector('.duration-time').textContent = '—';
-                    badge.querySelector('.duration-distance').textContent = 'API Fehler';
-                }
+            const map = new google.maps.Map(document.getElementById(containerId), {
+                zoom: 10,
+                center: {
+                    lat: (originLatLng.lat + DESTINATION.lat) / 2,
+                    lng: (originLatLng.lng + DESTINATION.lng) / 2
+                },
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false
             });
+            
+            // Origin marker (green - home)
+            new google.maps.Marker({
+                position: originLatLng,
+                map: map,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 12,
+                    fillColor: '#22c55e',
+                    fillOpacity: 1,
+                    strokeColor: '#fff',
+                    strokeWeight: 3
+                },
+                title: 'Wohnadresse 2025'
+            });
+            
+            // Destination marker (red - work)
+            new google.maps.Marker({
+                position: DESTINATION,
+                map: map,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 12,
+                    fillColor: '#ef4444',
+                    fillOpacity: 1,
+                    strokeColor: '#fff',
+                    strokeWeight: 3
+                },
+                title: 'Thyssenkrupp Presta'
+            });
+            
+            // Draw a simple dashed line between them
+            new google.maps.Polyline({
+                path: [originLatLng, DESTINATION],
+                geodesic: true,
+                strokeColor: '#666',
+                strokeOpacity: 0,
+                strokeWeight: 0,
+                icons: [{
+                    icon: {
+                        path: 'M 0,-1 0,1',
+                        strokeOpacity: 0.6,
+                        strokeColor: '#e91e63',
+                        scale: 3
+                    },
+                    offset: '0',
+                    repeat: '15px'
+                }],
+                map: map
+            });
+            
+            // Fit bounds to show both markers
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend(originLatLng);
+            bounds.extend(DESTINATION);
+            map.fitBounds(bounds, 60);
         }
         
         function init() {
@@ -265,24 +320,49 @@
             const origin2025 = params.get('origin2025');
             const origin2026 = params.get('origin2026');
             
+            // Historical times from spreadsheet (in seconds)
+            const car2025sec = params.get('car2025');
+            const ov2025sec = params.get('ov2025');
+            const car2026sec = params.get('car2026');
+            const ov2026sec = params.get('ov2026');
+            
+            // 2025: Markers only + historical times
             if (origin2025) {
-                document.getElementById('map2025car').innerHTML = 
-                    `<iframe class="map-frame" src="${getGoogleEmbedUrl(origin2025, 'driving')}" allowfullscreen loading="lazy"></iframe>`;
-                document.getElementById('map2025transit').innerHTML = 
-                    `<iframe class="map-frame" src="${getGoogleEmbedUrl(origin2025, 'transit')}" allowfullscreen loading="lazy"></iframe>`;
-                
-                fetchDuration(origin2025, 'driving', 'duration2025car');
-                fetchDuration(origin2025, 'transit', 'duration2025transit');
+                createMarkersOnlyMap('map2025car', origin2025);
+                createMarkersOnlyMap('map2025transit', origin2025);
             }
             
+            // 2026: Google Maps Embed with routes
             if (origin2026) {
                 document.getElementById('map2026car').innerHTML = 
                     `<iframe class="map-frame" src="${getGoogleEmbedUrl(origin2026, 'driving')}" allowfullscreen loading="lazy"></iframe>`;
                 document.getElementById('map2026transit').innerHTML = 
                     `<iframe class="map-frame" src="${getGoogleEmbedUrl(origin2026, 'transit')}" allowfullscreen loading="lazy"></iframe>`;
-                
-                fetchDuration(origin2026, 'driving', 'duration2026car');
-                fetchDuration(origin2026, 'transit', 'duration2026transit');
+            }
+            
+            // Display historical times from URL params
+            if (car2025sec) {
+                document.getElementById('duration2025car').querySelector('.duration-time').textContent = formatSeconds(parseFloat(car2025sec));
+            }
+            if (ov2025sec) {
+                const val = parseFloat(ov2025sec);
+                // Handle the "no route found" value (5999999940)
+                if (val > 100000000) {
+                    document.getElementById('duration2025transit').querySelector('.duration-time').textContent = 'Keine Verbindung';
+                } else {
+                    document.getElementById('duration2025transit').querySelector('.duration-time').textContent = formatSeconds(val);
+                }
+            }
+            if (car2026sec) {
+                document.getElementById('duration2026car').querySelector('.duration-time').textContent = formatSeconds(parseFloat(car2026sec));
+            }
+            if (ov2026sec) {
+                const val = parseFloat(ov2026sec);
+                if (val > 100000000) {
+                    document.getElementById('duration2026transit').querySelector('.duration-time').textContent = 'Keine Verbindung';
+                } else {
+                    document.getElementById('duration2026transit').querySelector('.duration-time').textContent = formatSeconds(val);
+                }
             }
         }
     </script>
